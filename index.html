@@ -1,436 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Department Hub</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Chosen Palette: Warm Neutrals & Subtle Accents */
-        /* Background: light gray (bg-gray-100) */
-        /* Primary (content cards): white (bg-white) */
-        /* Text: dark gray (text-gray-800), medium gray (text-gray-700), light gray (text-gray-500) */
-        /* Accent: subtle blue (focus:ring-blue-500, focus:border-blue-500, text-blue-600) for active tabs/links */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Modal Overlay */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 50;
-        }
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 0.75rem; /* rounded-xl */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
-            width: 90%;
-            max-width: 500px;
-            position: relative;
-        }
-        .modal-close-button {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #4a5568; /* gray-700 */
-        }
-    </style>
-    <!--
-    Application Structure Plan: The "Department Hub" is structured as a single-page application using a tabbed navigation system.
-    A prominent header introduces the page. Below the header, a horizontal navigation bar contains distinct tabs:
-    "Calendar," "Repository," "Projects," "Google Studio," and now "Notifications." Each tab corresponds to a content section.
-    Clicking a tab reveals its associated content while hiding others, providing a clean and focused user experience.
-    The content areas are designed with a responsive grid/flex layout for lists of links or calendar display.
-    The Calendar tab now includes an "Add Event" button and a modal for adding/editing events, and a dynamic section to display events for a selected day.
-    A new "Notifications" tab displays a list of departmental announcements.
-    This tabbed structure was chosen for its intuitive navigation, allowing users to quickly jump between major categories of departmental resources.
-    It consolidates information on one page, eliminating the need for full page reloads, thereby enhancing user understanding and exploration efficiency, now with added interactive event management and a dedicated notification feed.
-
-    Visualization & Content Choices:
-    - Main Navigation Tabs: HTML buttons with dynamic Tailwind classes to highlight the active tab. Goal: Navigate, Organize. Interaction: Click to switch content section.
-    - Calendar Section: Dynamically generated HTML table for a monthly calendar grid. Days with events are highlighted. Goal: Inform (events), Organize. Interaction: Passive viewing of calendar, click day to see/manage events. "Add Event" button opens a modal for input.
-    - Calendar Event Modal/Form: HTML form elements (input, textarea) within a Tailwind-styled modal. Goal: Input, Edit. Interaction: Text entry, date selection, save/cancel.
-    - Repository/Projects/Google Studio Sections: Simple lists of HTML anchor (`<a>`) tags, styled as clickable links. Goal: Access, Organize. Interaction: Click to external resource.
-    - Notifications Section: Displays a list of notification cards (title, date, message). Goal: Inform. Interaction: Passive viewing.
-    - Overall Layout: Centered, responsive container (`max-w-4xl mx-auto`) with padding, using Tailwind's flexbox for tab navigation and grid for content arrangement where applicable (e.g., project links). Modals are overlaid for event management.
-    - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
-    -->
+  <meta charset="UTF-8">
+  <title>Department Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fa; }
+    .ticker {
+      width: 100vw; background: #0078D4; color: #fff; overflow: hidden; white-space: nowrap;
+      padding: 0.5em 0; font-weight: bold; 
+    }
+    .ticker span {
+      display: inline-block;
+      padding-left: 100vw;
+      animation: ticker 18s linear infinite;
+    }
+    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100vw); } }
+    .header { background: #fff; padding: 1.5em; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+    .header h1 { margin: 0; color: #0078D4; }
+    .tabs { display: flex; border-bottom: 2px solid #0078D4; background: #e9eef2; }
+    .tab-btn {
+      flex: 1; padding: 1em; text-align: center; cursor: pointer; background: #e9eef2; color: #333;
+      border: none; outline: none; font-size: 1em; transition: background .2s;
+    }
+    .tab-btn.active { background: #fff; color: #0078D4; font-weight: bold; border-bottom: 2px solid #fff; }
+    .tab-content { display: none; padding: 2em; background: #fff; }
+    .tab-content.active { display: block; }
+    .event-list { list-style: none; padding: 0; }
+    .event-list li { background: #f1f7ff; margin: 0.5em 0; padding: 0.75em 1em; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .event-list button { background: #dc3545; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; padding: 0.3em 0.9em;}
+    .event-form input, .event-form button { font-size: 1em; padding: 0.5em; margin-right: 0.5em; }
+    .project-links, .repo-links { list-style: none; padding: 0; }
+    .project-links li, .repo-links li { margin: 0.5em 0; }
+    .project-links a, .repo-links a { color: #0078D4; text-decoration: none; font-weight: 500; }
+    .project-links a:hover, .repo-links a:hover { text-decoration: underline; }
+    @media (max-width: 700px) {
+      .tab-content { padding: 1em; }
+      .tabs { font-size: 0.95em; }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
-    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-4xl mb-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Department Hub</h1>
+<body>
+  <!-- Notification Ticker -->
+  <div class="ticker"><span>🛎️ Notifications: Server maintenance this Friday 7 PM | New SOP released | Fill your event report on time | ...</span></div>
+  <!-- HEADER -->
+  <div class="header">
+    <h1>My Department Dashboard</h1>
+    <p>All tools & resources in one place.</p>
+  </div>
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('calendar')">Calendar</button>
+    <button class="tab-btn" onclick="showTab('repo')">Repositories & Projects</button>
+    <button class="tab-btn" onclick="showTab('studio')">Google Studio</button>
+  </div>
+  <!-- TAB CONTENT -->
+  <div id="calendar" class="tab-content active">
+    <h2>Event Calendar</h2>
+    <form class="event-form" onsubmit="addEvent(event)">
+      <input type="date" id="eventDate" required>
+      <input type="text" id="eventTitle" placeholder="Event Title" required>
+      <button type="submit">Add Event</button>
+    </form>
+    <ul class="event-list" id="eventList"></ul>
+  </div>
+  <div id="repo" class="tab-content">
+    <h2>Repositories & Project Links</h2>
+    <ul class="repo-links">
+      <li><a href="https://github.com/webkanregdenpasar/PDSKKRX" target="_blank">Main Repository</a></li>
+      <!-- Add more repositories here -->
+    </ul>
+    <h3>Programs & Tools</h3>
+    <ul class="project-links">
+      <li><a href="generator.html" target="_blank">Request Status Message Generator</a></li>
+      <li><a href="#" target="_blank">Program 2 Link</a></li>
+      <li><a href="#" target="_blank">Program 3 Link</a></li>
+      <li><a href="#" target="_blank">Program 4 Link</a></li>
+      <li><a href="#" target="_blank">Program 5 Link</a></li>
+      <li><a href="#" target="_blank">Program 6 Link</a></li>
+      <li><a href="#" target="_blank">Program 7 Link</a></li>
+      <li><a href="#" target="_blank">Program 8 Link</a></li>
+      <!-- Add or change links as needed -->
+    </ul>
+  </div>
+  <div id="studio" class="tab-content">
+    <h2>Google Studio</h2>
+    <ul class="project-links">
+      <li><a href="https://datastudio.google.com/" target="_blank">Google Data Studio Main</a></li>
+      <li><a href="#" target="_blank">Studio Project 1</a></li>
+      <li><a href="#" target="_blank">Studio Project 2</a></li>
+      <!-- Add more Google Studio links here -->
+    </ul>
+  </div>
+  <!-- SCRIPTS -->
+  <script>
+    // Tab switching
+    function showTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tabc => tabc.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        if (btn.textContent.toLowerCase().includes(tab)) btn.classList.add('active');
+      });
+      document.getElementById(tab).classList.add('active');
+    }
 
-        <p class="text-gray-700 text-base mb-6 text-center">
-            Welcome to the central hub for our department. Use the tabs below to quickly access important resources, view the department calendar, explore project information, and find key links.
-        </p>
-
-        <!-- Tab Navigation -->
-        <div class="flex flex-wrap justify-center md:justify-start border-b border-gray-200 mb-6">
-            <button
-                class="tab-button py-3 px-6 text-lg font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out"
-                data-tab="calendar"
-            >
-                Calendar
-            </button>
-            <button
-                class="tab-button py-3 px-6 text-lg font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out"
-                data-tab="repository"
-            >
-                Repository
-            </button>
-            <button
-                class="tab-button py-3 px-6 text-lg font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out"
-                data-tab="projects"
-            >
-                Projects
-            </button>
-            <button
-                class="tab-button py-3 px-6 text-lg font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out"
-                data-tab="google-studio"
-            >
-                Google Studio
-            </button>
-            <button
-                class="tab-button py-3 px-6 text-lg font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out"
-                data-tab="notifications"
-            >
-                Notifications
-            </button>
-        </div>
-
-        <!-- Tab Content Containers -->
-        <div id="calendar-content" class="tab-content">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Department Calendar</h2>
-            <p class="text-gray-700 mb-4">
-                This calendar provides an overview of key departmental events and important dates for the current month. Click on a day to view or add events.
-            </p>
-            <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-gray-800 border border-gray-300 rounded-lg p-2 mb-4">
-                <!-- Calendar content will be generated here by JavaScript -->
-            </div>
-            <div class="flex justify-center mb-4">
-                <button id="add-event-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
-                    Add New Event
-                </button>
-            </div>
-            <div id="day-events-display" class="hidden bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <h3 class="text-xl font-semibold text-gray-800 mb-3">Events for <span id="selected-date-display"></span></h3>
-                <div id="events-list" class="space-y-2">
-                    <!-- Events for selected day will be listed here -->
-                </div>
-                <button id="close-day-events" class="mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg shadow-sm transition duration-300 ease-in-out">Close</button>
-            </div>
-        </div>
-
-        <div id="repository-content" class="tab-content hidden">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Code Repositories & Documentation</h2>
-            <p class="text-gray-700 mb-4">
-                Access important code repositories and documentation for development and reference.
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a href="https://github.com/your-org/frontend-monorepo" target="_blank" class="block bg-blue-50 hover:bg-blue-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-blue-700">Frontend Monorepo</span>
-                    <p class="text-gray-600 text-sm">Centralized repository for all frontend applications.</p>
-                </a>
-                <a href="https://github.com/your-org/backend-services" target="_blank" class="block bg-blue-50 hover:bg-blue-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-blue-700">Backend Services</span>
-                    <p class="text-gray-600 text-sm">Core backend APIs and microservices.</p>
-                </a>
-                <a href="https://docs.your-org.com/api" target="_blank" class="block bg-blue-50 hover:bg-blue-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-blue-700">API Documentation</span>
-                    <p class="text-gray-600 text-sm">Comprehensive documentation for internal and external APIs.</p>
-                </a>
-                <a href="https://github.com/your-org/deployment-scripts" target="_blank" class="block bg-blue-50 hover:bg-blue-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-blue-700">Deployment Scripts</span>
-                    <p class="text-gray-600 text-sm">Scripts and configurations for application deployments.</p>
-                </a>
-            </div>
-        </div>
-
-        <div id="projects-content" class="tab-content hidden">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Department Projects</h2>
-            <p class="text-gray-700 mb-4">
-                Explore the various programs and projects currently underway within our department.
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a href="https://projectalpha.your-org.com" target="_blank" class="block bg-purple-50 hover:bg-purple-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-purple-700">Project Alpha Dashboard</span>
-                    <p class="text-gray-600 text-sm">Real-time metrics and insights for Project Alpha.</p>
-                </a>
-                <a href="https://betasolutions.your-org.com/analytics" target="_blank" class="block bg-purple-50 hover:bg-purple-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-purple-700">Project Beta Analytics</span>
-                    <p class="text-gray-600 text-sm">Detailed analytics reports for Project Beta's performance.</p>
-                </a>
-                <a href="https://gammalaunch.your-org.com" target="_blank" class="block bg-purple-50 hover:bg-purple-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-purple-700">Gamma Product Launch Site</span>
-                    <p class="text-gray-600 text-sm">Official website for the upcoming Gamma product launch.</p>
-                </a>
-                <a href="https://deltacrm.your-org.com" target="_blank" class="block bg-purple-50 hover:bg-purple-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-purple-700">Delta CRM Integration</span>
-                    <p class="text-gray-600 text-sm">Status and documentation for CRM integration efforts.</p>
-                </a>
-                <a href="https://epsilon-data.your-org.com" target="_blank" class="block bg-purple-50 hover:bg-purple-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-purple-700">Epsilon Data Platform</span>
-                    <p class="text-gray-600 text-sm">Access to the Epsilon data warehousing and reporting platform.</p>
-                </a>
-                <a href="https://fusionapp.your-org.com" target="_blank" class="block bg-purple-50 hover:bg-purple-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-purple-700">Fusion Mobile App</span>
-                    <p class="text-gray-600 text-sm">Information and download links for the Fusion mobile application.</p>
-                </a>
-                <a href="https://harmony-ai.your-org.com" target="_blank" class="block bg-purple-50 hover:bg-purple-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-purple-700">Harmony AI Initiative</span>
-                    <p class="text-gray-600 text-sm">Updates and resources for the Harmony Artificial Intelligence project.</p>
-                </a>
-                <a href="https://jupiter-security.your-org.com" target="_blank" class="block bg-purple-50 hover:bg-purple-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-purple-700">Jupiter Security Audit</span>
-                    <p class="text-gray-600 text-sm">Results and action items from the latest security audit.</p>
-                </a>
-            </div>
-        </div>
-
-        <div id="google-studio-content" class="tab-content hidden">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Google Studio & Cloud Links</h2>
-            <p class="text-gray-700 mb-4">
-                Quick access to frequently used Google services and dashboards.
-            </p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a href="https://analytics.google.com/" target="_blank" class="block bg-yellow-50 hover:bg-yellow-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-yellow-700">Google Analytics Dashboard</span>
-                    <p class="text-gray-600 text-sm">View website traffic and user behavior analytics.</p>
-                </a>
-                <a href="https://lookerstudio.google.com/" target="_blank" class="block bg-yellow-50 hover:bg-yellow-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-yellow-700">Google Data Studio Reports</span>
-                    <p class="text-gray-600 text-sm">Access custom data visualizations and reports.</p>
-                </a>
-                <a href="https://console.cloud.google.com/" target="_blank" class="block bg-yellow-50 hover:bg-yellow-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-yellow-700">Google Cloud Console</span>
-                    <p class="text-gray-600 text-sm">Manage Google Cloud resources and services.</p>
-                </a>
-                <a href="https://drive.google.com/drive/folders/your-department-folder-id" target="_blank" class="block bg-yellow-50 hover:bg-yellow-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
-                    <span class="font-semibold text-yellow-700">Google Drive - Department Folder</span>
-                    <p class="text-gray-600 text-sm">Shared drive for departmental documents and files.</p>
-                </a>
-            </div>
-        </div>
-
-        <div id="notifications-content" class="tab-content hidden">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Department Notifications</h2>
-            <p class="text-gray-700 mb-4">
-                Stay updated with the latest announcements and important notices from the department.
-            </p>
-            <div id="notifications-list" class="space-y-4">
-                <!-- Notifications will be generated here by JavaScript -->
-            </div>
-            <button id="add-notification-button" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
-                Add New Notification
-            </button>
-        </div>
-    </div>
-
-    <!-- Event Modal Structure -->
-    <div id="event-modal-overlay" class="modal-overlay hidden">
-        <div class="modal-content">
-            <button class="modal-close-button" onclick="closeEventModal()">&times;</button>
-            <h2 id="event-modal-title" class="text-2xl font-bold text-gray-800 mb-4">Add Event</h2>
-            <form id="event-form">
-                <input type="hidden" id="event-id">
-                <div class="mb-4">
-                    <label for="event-title" class="block text-gray-700 text-sm font-semibold mb-2">Event Title:</label>
-                    <input type="text" id="event-title" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <div class="mb-4">
-                    <label for="event-description" class="block text-gray-700 text-sm font-semibold mb-2">Description:</label>
-                    <textarea id="event-description" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-y" rows="3"></textarea>
-                </div>
-                <div class="mb-6">
-                    <label for="event-date" class="block text-gray-700 text-sm font-semibold mb-2">Date:</label>
-                    <input type="date" id="event-date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="closeEventModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg shadow-sm transition duration-300 ease-in-out">Cancel</button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">Save Event</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Notification Modal Structure -->
-    <div id="notification-modal-overlay" class="modal-overlay hidden">
-        <div class="modal-content">
-            <button class="modal-close-button" onclick="closeNotificationModal()">&times;</button>
-            <h2 id="notification-modal-title" class="text-2xl font-bold text-gray-800 mb-4">Add Notification</h2>
-            <form id="notification-form">
-                <input type="hidden" id="notification-id">
-                <div class="mb-4">
-                    <label for="notification-title" class="block text-gray-700 text-sm font-semibold mb-2">Notification Title:</label>
-                    <input type="text" id="notification-title" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <div class="mb-4">
-                    <label for="notification-message" class="block text-gray-700 text-sm font-semibold mb-2">Message:</label>
-                    <textarea id="notification-message" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-y" rows="4" required></textarea>
-                </div>
-                <div class="mb-6">
-                    <label for="notification-date" class="block text-gray-700 text-sm font-semibold mb-2">Date:</label>
-                    <input type="date" id="notification-date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
-                </div>
-                <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="closeNotificationModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg shadow-sm transition duration-300 ease-in-out">Cancel</button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">Save Notification</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-
-    <script>
-        // In-memory data stores for events and notifications
-        let events = [
-            { id: 'e1', date: '2025-07-15', title: 'Department Meeting', description: 'Monthly strategic planning meeting.' },
-            { id: 'e2', date: '2025-07-20', title: 'Project Alpha Review', description: 'Review of Project Alpha milestones.' },
-            { id: 'e3', date: '2025-07-20', title: 'Team Building', description: 'Virtual team building activity.' },
-            { id: 'e4', date: '2025-08-05', title: 'New Employee Onboarding', description: 'Welcome new hires.' }
-        ];
-
-        let notifications = [
-            { id: 'n1', date: '2025-07-01', title: 'Office Holiday Reminder', message: 'The office will be closed on July 4th for Independence Day.' },
-            { id: 'n2', date: '2025-06-28', title: 'System Maintenance', message: 'Scheduled system maintenance on July 5th, 10 PM - 2 AM UTC.' },
-            { id: 'n3', date: '2025-06-25', title: 'New Policy Update', message: 'Please review the updated remote work policy in Google Drive.' }
-        ];
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
-            const calendarGrid = document.getElementById('calendar-grid');
-            const addEventButton = document.getElementById('add-event-button');
-            const dayEventsDisplay = document.getElementById('day-events-display');
-            const selectedDateDisplay = document.getElementById('selected-date-display');
-            const eventsList = document.getElementById('events-list');
-            const closeDayEventsButton = document.getElementById('close-day-events');
-
-            const eventModalOverlay = document.getElementById('event-modal-overlay');
-            const eventModalTitle = document.getElementById('event-modal-title');
-            const eventForm = document.getElementById('event-form');
-            const eventIdInput = document.getElementById('event-id');
-            const eventTitleInput = document.getElementById('event-title');
-            const eventDescriptionInput = document.getElementById('event-description');
-            const eventDateInput = document.getElementById('event-date');
-
-            const notificationsList = document.getElementById('notifications-list');
-            const addNotificationButton = document.getElementById('add-notification-button');
-            const notificationModalOverlay = document.getElementById('notification-modal-overlay');
-            const notificationModalTitle = document.getElementById('notification-modal-title');
-            const notificationForm = document.getElementById('notification-form');
-            const notificationIdInput = document.getElementById('notification-id');
-            const notificationTitleInput = document.getElementById('notification-title');
-            const notificationMessageInput = document.getElementById('notification-message');
-            const notificationDateInput = document.getElementById('notification-date');
-
-
-            let currentCalendarDate = new Date(); // Tracks the month/year currently displayed on calendar
-
-            function showTab(tabName) {
-                tabContents.forEach(content => {
-                    content.classList.add('hidden');
-                });
-                tabButtons.forEach(button => {
-                    button.classList.remove('text-blue-600', 'border-blue-600');
-                    button.classList.add('text-gray-600', 'border-transparent');
-                });
-
-                document.getElementById(`${tabName}-content`).classList.remove('hidden');
-                document.querySelector(`.tab-button[data-tab="${tabName}"]`).classList.add('text-blue-600', 'border-blue-600');
-
-                if (tabName === 'calendar') {
-                    renderCalendar();
-                } else if (tabName === 'notifications') {
-                    renderNotifications();
-                }
-            }
-
-            tabButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const tabName = button.dataset.tab;
-                    showTab(tabName);
-                });
-            });
-
-            // Function to render the calendar
-            function renderCalendar() {
-                const year = currentCalendarDate.getFullYear();
-                const month = currentCalendarDate.getMonth();
-
-                const firstDayOfMonth = new Date(year, month, 1);
-                const lastDayOfMonth = new Date(year, month + 1, 0);
-                const daysInMonth = lastDayOfMonth.getDate();
-
-                calendarGrid.innerHTML = '';
-
-                const monthName = firstDayOfMonth.toLocaleString('en-US', { month: 'long' });
-                const headerRow = document.createElement('div');
-                headerRow.className = 'col-span-7 bg-gray-200 py-2 rounded-t-lg font-bold text-lg';
-                headerRow.textContent = `${monthName} ${year}`;
-                calendarGrid.appendChild(headerRow);
-
-                const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                weekdays.forEach(day => {
-                    const dayHeader = document.createElement('div');
-                    dayHeader.className = 'font-semibold py-2 text-gray-700';
-                    dayHeader.textContent = day;
-                    calendarGrid.appendChild(dayHeader);
-                });
-
-                const startDay = firstDayOfMonth.getDay();
-                for (let i = 0; i < startDay; i++) {
-                    const emptyCell = document.createElement('div');
-                    emptyCell.className = 'p-2 text-gray-400';
-                    calendarGrid.appendChild(emptyCell);
-                }
-
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const dayCell = document.createElement('div');
-                    dayCell.className = 'p-2 border border-gray-200 rounded cursor-pointer relative group';
-                    dayCell.textContent = day;
-                    dayCell.dataset.date = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-
-                    const today = new Date();
-                    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                        dayCell.classList.add('bg-blue-100', 'font-bold', 'text-blue-800', 'border-blue-300');
-                    }
-
-                    // Check for events on this day
-                    const eventsOnThisDay = events.filter(event => event.date === dayCell.dataset.date);
-                    if (eventsOnThisDay.length > 0) {
-                        dayCell.classList.add('bg-purple-50', 'border-purple-200'); // Highlight days with events
-                        const eventDot = document.createElement('div');
-                        eventDot.className = 'absolute top-1 right-1 w-2 h-2 bg-purple-500 rounded-full';
-                        dayCell.appendChild(eventDot);
-                        
-                        // Optional: show event titles on hover (for small number of events)
-                        const eventTitles = eventsOnThisDay.map(e => e.title).join(', ');
-                        dayCell.title = eventTitles;
-                    }
-
-                    dayCell.addEventListener('click', (event) => {
-                        displayDayEvents(dayCell.dataset.date);
-                    });
-                    calendarGrid.appendChild(dayCell);
-                }
-            }
-
-            function displayDayEvents(date) {
-                const [year, month, day] = date.split('-');
-                const formattedDate = new Date(year, month - 1, day).toLocaleDateString('en-US', { weekday: 'long', y
+    // Calendar: Add/Remove Events with localStorage
+    const eventList = document.getElementById('eventList');
+    let events = JSON.parse(localStorage.getItem('deptEvents') || "[]");
+    function renderEvents() {
+      eventList.innerHTML = '';
+      if (!events.length) eventList.innerHTML = '<li>No events added yet.</li>';
+      events.sort((a, b) => a.date.localeCompare(b.date)).forEach((ev, idx) => {
+        const li = document.createElement('li');
+        li.innerHTML = `<span>📅 <b>${ev.date}</b> - ${ev.title}</span>
+          <button onclick="removeEvent(${idx})">Remove</button>`;
+        eventList.appendChild(li);
+      });
+    }
+    function addEvent(e) {
+      e.preventDefault();
+      const date = document.getElementById('eventDate').value;
+      const title = document.getElementById('eventTitle').value.trim();
+      if (!date || !title) return;
+      events.push({ date, title });
+      localStorage.setItem('deptEvents', JSON.stringify(events));
+      renderEvents();
+      e.target.reset();
+    }
+    function removeEvent(idx) {
+      if (!confirm("Delete this event?")) return;
+      events.splice(idx, 1);
+      localStorage.setItem('deptEvents', JSON.stringify(events));
+      renderEvents();
+    }
+    renderEvents();
+  </script>
+</body>
+</html>
