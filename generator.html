@@ -11,9 +11,49 @@
     .csv-database { margin-top: 2em; width: 100%; min-height: 80px; font-family: monospace; }
     button { margin-right: 1em; }
     #copyBtn { float: right; }
+    .accept-btn {
+      background: #28a745;
+      color: #fff;
+      border: none;
+      padding: 0.5em 1.2em;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .reject-btn {
+      background: #dc3545;
+      color: #fff;
+      border: none;
+      padding: 0.5em 1.2em;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .accept-btn:hover {
+      background: #218838;
+    }
+    .reject-btn:hover {
+      background: #c82333;
+    }
+    .home-btn {
+      background: #0078D4;
+      color: #fff;
+      border: none;
+      padding: 0.5em 1.2em;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      margin-bottom: 2em;
+      display: inline-block;
+    }
+    .home-btn:hover {
+      background: #005fa3;
+    }
   </style>
 </head>
 <body>
+  <a href="index.html" class="home-btn">Home</a>
   <h1>Request Status Message Generator</h1>
   <form id="statusForm" onsubmit="return false;">
     <label>
@@ -40,8 +80,8 @@
     </label>
     <label>
       Request Status:
-      <button type="button" id="acceptBtn">Accept</button>
-      <button type="button" id="rejectBtn">Reject</button>
+      <button type="button" id="acceptBtn" class="accept-btn">Accept</button>
+      <button type="button" id="rejectBtn" class="reject-btn">Reject</button>
     </label>
     <div class="doc-checkbox-section" id="docCheckboxSection">
       <label>Kind(s) of document (select all that apply):</label>
