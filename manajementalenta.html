@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulir Tingkat Kematangan Manajemen Talenta</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Chosen Palette: Warm Neutrals & Subtle Accents */
+        /* Background: light gray (bg-gray-100) */
+        /* Primary (content cards): white (bg-white) */
+        /* Text: dark gray (text-gray-800), medium gray (text-gray-700), light gray (text-gray-500) */
+        /* Accent: subtle blue (focus:ring-blue-500, focus:border-blue-500, text-blue-600) for active tabs/links */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        .modal-close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4a5568; /* gray-700 */
+        }
+    </style>
+    <!--
+    Application Structure Plan: This single-page application is designed as an interactive assessment form for "Tingkat Kematangan Pembangunan Manajemen Talenta."
+    It features a main header and an input for "Nama Instansi." A primary tabbed navigation system organizes the assessment into five main sections: "Kelembagaan," "Infrastruktur Teknologi," "Akuisisi Talenta," "Pengembangan & Retensi Talenta," and "Pemantauan & Evaluasi." Each tab reveals a corresponding content area.
+    Within each content area, a structured questionnaire is presented. Each question (corresponding to an "Indikator") includes a checkbox, a text area for "Keterangan Kondisi Instansi," and a text input for "Input Tautan Bukti Dukung."
+    A "Hitung Skor" (Calculate Score) button triggers the calculation of individual section scores and a grand total, which are displayed dynamically at the bottom.
+    "Simpan Progres" (Save Progress) and "Download CSV" buttons allow users to persist their form data and export it for the current instance.
+    This architecture provides a clear, sequential flow for completing the assessment while allowing easy navigation between sections. The interactive elements (checkboxes, text inputs, dynamic score display) enhance user engagement and data entry efficiency.
+
+    Visualization & Content Choices:
+    - Main Navigation Tabs: HTML buttons with dynamic Tailwind classes for active states. Goal: Navigate, Organize. Interaction: Click to switch assessment sections.
+    - Input Fields: Text inputs and textareas for data entry (Nama Instansi, Keterangan Kondisi Instansi, Input Tautan Bukti Dukung). Goal: Input. Interaction: Typing.
+    - Checkboxes: Standard HTML checkboxes for "Daftar Centang." Goal: Input, Inform (binary state). Interaction: Click to select/deselect.
+    - Dynamic Score Display: Text elements updated via JavaScript to show calculated scores. Goal: Inform (quantitative data, results). Interaction: Automatic update after calculation.
+    - Save/Download Buttons: HTML buttons for data persistence and export. Goal: Action. Interaction: Click to save/download.
+    - Overall Layout: Centered container (`max-w-5xl mx-auto`) with responsive padding. Tailwind's flexbox for tab navigation and grid for questionnaire item layout within each tab.
+    - Modals: Reusable modal for alerts and confirmations (e.g., for missing fields or successful save/load).
+    - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+</head>
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-5xl mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Formulir Tingkat Kematangan Pembangunan Manajemen Talenta</h1>
+
+        <p class="text-gray-700 text-base mb-6 text-center">
+            Isi formulir ini untuk menilai tingkat kematangan pembangunan manajemen talenta instansi Anda. Centang indikator yang telah terpenuhi, berikan keterangan, dan tautkan bukti pendukung.
+        </p>
+
+        <div class="mb-6">
+            <label for="nama-instansi" class="block text-gray-700 text-sm font-semibold mb-2">Nama Instansi:</label>
+            <input type="text" id="nama-instansi" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Masukkan Nama Instansi Anda">
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex flex-wrap justify-center md:justify-start border-b border-gray-200 mb-6">
+            <button class="tab-button py-3 px-4 text-sm md:text-base font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out" data-tab="kelembagaan">Kelembagaan</button>
+            <button class="tab-button py-3 px-4 text-sm md:text-base font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out" data-tab="infrastruktur">Infrastruktur Teknologi</button>
+            <button class="tab-button py-3 px-4 text-sm md:text-base font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out" data-tab="akuisi">Akuisisi Talenta</button>
+            <button class="tab-button py-3 px-4 text-sm md:text-base font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out" data-tab="pengembangan">Pengembangan & Retensi</button>
+            <button class="tab-button py-3 px-4 text-sm md:text-base font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out" data-tab="pemantauan">Pemantauan & Evaluasi</button>
+        </div>
+
+        <!-- Form Content (Tab-wise) -->
+        <form id="maturity-assessment-form">
+            <div id="kelembagaan-content" class="tab-content space-y-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">I. Kelembagaan Manajemen Talenta Instansi</h2>
+                <p class="text-gray-700 mb-4">Bagian ini menilai aspek kelembagaan dan komitmen dalam penerapan manajemen talenta.</p>
+
+                <!-- 1.1 Komitmen Pejabat Pembina Kepegawaian Instansi -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">1.1 Komitmen Pejabat Pembina Kepegawaian Instansi (Total Max: 2.5)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1.5" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Pakta komitmen telah ditandatangani oleh PPK.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Terdapat pernyataan komitmen PPK untuk dukungan sumber daya.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Terdapat pernyataan komitmen PPK untuk terlibat aktif.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+
+                <!-- 1.2 Pembentukan Tim Kerja Manajemen Talenta Instansi -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">1.2 Pembentukan Tim Kerja Manajemen Talenta Instansi (Total Max: 2.1)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Terdapat Surat Keputusan pembentukan tim kerja.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Anggota tim kerja telah mewakili bidang kunci.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1.1" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Terdapat deskripsi tugas dan rencana kerja tim.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+
+                <!-- 1.3 Pembentukan Sekretariat Komite Talenta Instansi -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">1.3 Pembentukan Sekretariat Komite Talenta Instansi (Total Max: 2)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Surat keputusan pembentukan Sekretariat Komite Talenta telah ditandatangani.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Terdapat deskripsi tugas dari Sekretariat Komite Talenta.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+
+                <!-- 1.4 Pembentukan Komite Talenta Instansi -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">1.4 Pembentukan Komite Talenta Instansi (Total Max: 2)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Surat keputusan pembentukan Komite Talenta telah ditandatangani oleh PPK.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Terdapat deskripsi tugas dari Komite Talenta.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+
+                <!-- 1.5 Pengembangan Kapasitas Pengelolaan Manajemen Talenta Instansi -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">1.5 Pengembangan Kapasitas Pengelolaan Manajemen Talenta Instansi (Total Max: 0.4)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="0.25" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Terdapat kesesuaian program dengan kebutuhan pengelolaan manajemen talenta.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="0.15" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Terdapat mekanisme untuk mengukur peningkatan pemahaman peserta.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+
+                <!-- 1.6 Kebijakan Manajemen Talenta Instansi -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">1.6 Kebijakan Manajemen Talenta Instansi (Total Max: 5)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="3" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Kebijakan manajemen talenta telah ditandatangani oleh PPK.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="2" data-section="kelembagaan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Kebijakan manajemen talenta selaras dengan ketentuan nasional dan mencakup seluruh aspek.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+            </div>
+
+            <div id="infrastruktur-content" class="tab-content hidden space-y-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">II. Infrastruktur Teknologi Manajemen Talenta Instansi</h2>
+                <p class="text-gray-700 mb-4">Bagian ini menilai ketersediaan dan pemanfaatan aplikasi manajemen talenta.</p>
+
+                <!-- 2.1 Ketersediaan dan Pemanfaatan Aplikasi Manajemen Talenta Instansi -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">2.1 Ketersediaan dan Pemanfaatan Aplikasi Manajemen Talenta Instansi (Total Max: 8)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="2" data-section="infrastruktur" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Aplikasi manajemen talenta tersedia dan telah digunakan.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="2" data-section="infrastruktur" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Aplikasi menyediakan fitur esensial (pemetaan talent pool, rencana suksesi).</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="4" data-section="infrastruktur" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Data yang dihasilkan aplikasi lengkap dan akurat.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="2" data-section="infrastruktur" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Aplikasi terintegrasi dengan sistem informasi ASN (SI ASN) BKN, dan e-Kinerja.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+            </div>
+
+            <div id="akuisi-content" class="tab-content hidden space-y-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">III.1 Akuisisi Talenta</h2>
+                <p class="text-gray-700 mb-4">Bagian ini menilai proses identifikasi dan penilaian talenta.</p>
+
+                <!-- 3.1.1 Identifikasi Jabatan Target -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">3.1.1 Identifikasi Jabatan Target (Total Max: 3)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Peta Jabatan Target lowong untuk level JPT telah disusun.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Peta Jabatan Target yang akan lowong minimal 1 tahun ke depan di level JPT telah disusun.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Peta Jabatan Target lowong untuk level Administrator telah disusun.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+
+                <!-- 3.1.2 Analisis Kebutuhan Talenta -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">3.1.2 Analisis Kebutuhan Talenta (Total Max: 1)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Terdapat mekanisme seleksi talenta secara administratif berdasarkan persyaratan.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+
+                <!-- 3.1.3 Rumpun Jabatan -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">3.1.3 Rumpun Jabatan (Total Max: 0.7)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="0.2" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Daftar/Bagan rumpun jabatan telah tersedia.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="0.5" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Kesesuaian rumpun jabatan telah digunakan untuk memproyeksikan talenta.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+
+                <!-- 3.1.4 Penentuan Parameter, Komponen, dan Bobot Penilaian Talenta -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">3.1.4 Penentuan Parameter, Komponen, dan Bobot Penilaian Talenta (Total Max: 4.25)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="0.5" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Aspek kinerja dan potensial telah ditentukan sebagai parameter penilaian.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="0.5" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Setiap parameter penilaian talenta telah terdiri dari komponen lebih spesifik.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="0.5" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Bobot untuk setiap parameter dan komponen telah ditentukan.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="2" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Parameter, komponen, dan bobot untuk 9 kotak talenta telah ditetapkan dalam kebijakan.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="0.75" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Predikat Kinerja, Potensi, Kompetensi, Kualifikasi, Integritas dan Moralitas digunakan.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+
+                <!-- 3.1.5 Penilaian Parameter Kinerja dan Potensial -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">3.1.5 Penilaian Parameter Kinerja dan Potensial (Total Max: 6)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="4" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Seluruh talenta telah dilakukan pemetaan kompetensi manajerial dan sosial kultural.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1.75" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Terdapat nilai akhir talenta di sistem informasi talenta dan detail nilai parameter.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="0.15" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Hasil penilaian talenta telah disampaikan kepada ASN sebagai umpan balik.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+
+                <!-- 3.1.6 Pemetaan Talenta ke dalam 9 Kotak Talenta -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">3.1.6 Pemetaan Talenta ke dalam 9 Kotak Talenta (Total Max: 14.5)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="11.5" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Sebagian besar (≥75%) pegawai terpetakan ke dalam 9 kotak talenta (JPT, Administrator, Pengawas).</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Distribusi pegawai dalam 9 kotak talenta tidak dominan pada Kelompok Rencana Suksesi.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="2" data-section="akuisi" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Bagan rencana suksesi untuk Jabatan Target (JPT, Administrator, Pengawas) telah tersedia.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+            </div>
+
+            <div id="pengembangan-content" class="tab-content hidden space-y-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">III.2 Pengembangan & III.3 Retensi Talenta</h2>
+                <p class="text-gray-700 mb-4">Bagian ini menilai rencana pengembangan individu dan strategi retensi talenta.</p>
+
+                <!-- 3.2 Pengembangan Talenta -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">3.2 Pengembangan Talenta (Total Max: 10)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="4" data-section="pengembangan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Rencana Pengembangan Individu talenta telah disusun.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="2" data-section="pengembangan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Rencana Pengembangan Individu telah disusun melalui diskusi kolaboratif.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="4" data-section="pengembangan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Terdapat talenta yang telah melaksanakan program pengembangan sesuai RPI.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+
+                <!-- 3.3 Retensi Talenta -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">3.3 Retensi Talenta (Total Max: 10)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="5" data-section="pengembangan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Rancangan strategi retensi spesifik untuk setiap kelompok talenta telah disusun.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="5" data-section="pengembangan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Program retensi talenta telah direncanakan dan/atau diimplementasikan.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+            </div>
+
+            <div id="pemantauan-content" class="tab-content hidden space-y-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">V. Pemantauan & Evaluasi</h2>
+                <p class="text-gray-700 mb-4">Bagian ini menilai proses pemantauan dan evaluasi terhadap manajemen talenta.</p>
+
+                <!-- 5.1 Pelaksanaan Pemantauan dan Evaluasi -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">5.1 Pelaksanaan Pemantauan dan Evaluasi (Total Max: 5)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1.5" data-section="pemantauan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Pemantauan & evaluasi proses akuisisi talenta dilaksanakan minimal sekali setahun terakhir.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="2.5" data-section="pemantauan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Pemantauan & evaluasi proses pengembangan dan retensi talenta dilaksanakan minimal sekali setahun terakhir.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="1" data-section="pemantauan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Evaluasi dilakukan terhadap kinerja suksesor yang telah 3 tahun ditempatkan.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+            </div>
+
+            <div id="penempatan-content" class="tab-content hidden space-y-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">IV. Penempatan Talenta</h2>
+                <p class="text-gray-700 mb-4">Bagian ini menilai kesesuaian penempatan talenta.</p>
+
+                <!-- 4.1 Penempatan Talenta -->
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h3 class="font-bold text-gray-800 mb-2">4.1 Penempatan Talenta (Total Max: 10)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center mb-3">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="8" data-section="penempatan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Suksesor yang diusulkan ke Jabatan Target berasal dari Kelompok Rencana Suksesi peringkat 3 besar.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                        <div class="md:col-span-1">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" name="indikator" value="2" data-section="penempatan" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                <span class="ml-2 text-gray-700">Penempatan suksesor ke dalam Jabatan Target sesuai rekomendasi Komite Talenta.</span>
+                            </label>
+                        </div>
+                        <textarea class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Keterangan Kondisi Instansi"></textarea>
+                        <input type="text" class="md:col-span-1 w-full p-2 border border-gray-300 rounded text-sm" placeholder="Input Tautan Bukti Dukung">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Score Display -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Hasil Penilaian Skor</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-lg font-medium text-blue-700">Skor Kelembagaan: <span id="score-kelembagaan">0</span> / 11.5</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-lg font-medium text-blue-700">Skor Infrastruktur Teknologi: <span id="score-infrastruktur">0</span> / 8</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-lg font-medium text-blue-700">Skor Akuisisi Talenta: <span id="score-akuisi">0</span> / 25.45</p>
+                    </div>
+                     <div class="bg-blue-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-lg font-medium text-blue-700">Skor Pengembangan & Retensi Talenta: <span id="score-pengembangan">0</span> / 20</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-lg font-medium text-blue-700">Skor Penempatan Talenta: <span id="score-penempatan">0</span> / 10</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg shadow-sm">
+                        <p class="text-lg font-bold text-blue-800">TOTAL SKOR: <span id="total-score">0</span> / 74.95</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-center space-x-4 mt-6">
+                    <button type="button" onclick="calculateScore()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">
+                        Hitung Skor
+                    </button>
+                    <button type="button" onclick="saveProgress()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">
+                        Simpan Progres
+                    </button>
+                    <button type="button" onclick="exportToCsv()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">
+                        Download CSV
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Generic Alert/Confirm Modal Structure -->
+    <div id="generic-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 id="generic-modal-title" class="text-2xl font-bold text-gray-800 mb-4"></h2>
+            <p id="generic-modal-message" class="text-gray-700 mb-6"></p>
+            <div class="flex justify-end space-x-3">
+                <button id="generic-modal-cancel" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg shadow-sm transition duration-300 ease-in-out hidden">Batal</button>
+                <button id="generic-modal-ok" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link to external JavaScript file -->
+    <script src="main.js"></script>
+</body>
+</html>
