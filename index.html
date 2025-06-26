@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <title>Department Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap for easy styling (optional, you can remove if you prefer custom CSS) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f5f7fa; }
+    body { background: #f5f7fa; }
     .ticker {
       width: 100vw; background: #0078D4; color: #fff; overflow: hidden; white-space: nowrap;
       padding: 0.5em 0; font-weight: bold; 
@@ -16,94 +18,101 @@
       animation: ticker 18s linear infinite;
     }
     @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100vw); } }
-    .header { background: #fff; padding: 1.5em; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
-    .header h1 { margin: 0; color: #0078D4; }
-    .tabs { display: flex; border-bottom: 2px solid #0078D4; background: #e9eef2; }
-    .tab-btn {
-      flex: 1; padding: 1em; text-align: center; cursor: pointer; background: #e9eef2; color: #333;
-      border: none; outline: none; font-size: 1em; transition: background .2s;
-    }
-    .tab-btn.active { background: #fff; color: #0078D4; font-weight: bold; border-bottom: 2px solid #fff; }
-    .tab-content { display: none; padding: 2em; background: #fff; }
-    .tab-content.active { display: block; }
+    .nav-tabs .nav-link.active { color: #0078D4 !important; font-weight: bold; }
+    .tab-content { background: #fff; border-radius: 0 0 6px 6px; padding: 2em 1em; }
     .event-list { list-style: none; padding: 0; }
     .event-list li { background: #f1f7ff; margin: 0.5em 0; padding: 0.75em 1em; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
     .event-list button { background: #dc3545; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; padding: 0.3em 0.9em;}
     .event-form input, .event-form button { font-size: 1em; padding: 0.5em; margin-right: 0.5em; }
-    .project-links, .repo-links { list-style: none; padding: 0; }
-    .project-links li, .repo-links li { margin: 0.5em 0; }
-    .project-links a, .repo-links a { color: #0078D4; text-decoration: none; font-weight: 500; }
-    .project-links a:hover, .repo-links a:hover { text-decoration: underline; }
-    @media (max-width: 700px) {
-      .tab-content { padding: 1em; }
-      .tabs { font-size: 0.95em; }
-    }
+    .project-card { margin: 1em 0; padding: 1em; background: #eef6fb; border-radius: 8px; }
+    .project-card .btn { margin-top: 0.5em; }
+    .external-link-list li { margin: 0.5em 0; }
+    .external-link-list a { color: #0078D4; text-decoration: none; }
+    .external-link-list a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <!-- Notification Ticker -->
   <div class="ticker"><span>🛎️ Notifications: Server maintenance this Friday 7 PM | New SOP released | Fill your event report on time | ...</span></div>
-  <!-- HEADER -->
-  <div class="header">
-    <h1>My Department Dashboard</h1>
-    <p>All tools & resources in one place.</p>
-  </div>
-  <!-- TABS -->
-  <div class="tabs">
-    <button class="tab-btn active" onclick="showTab('calendar')">Calendar</button>
-    <button class="tab-btn" onclick="showTab('repo')">Repositories & Projects</button>
-    <button class="tab-btn" onclick="showTab('studio')">Google Studio</button>
-  </div>
-  <!-- TAB CONTENT -->
-  <div id="calendar" class="tab-content active">
-    <h2>Event Calendar</h2>
-    <form class="event-form" onsubmit="addEvent(event)">
-      <input type="date" id="eventDate" required>
-      <input type="text" id="eventTitle" placeholder="Event Title" required>
-      <button type="submit">Add Event</button>
-    </form>
-    <ul class="event-list" id="eventList"></ul>
-  </div>
-  <div id="repo" class="tab-content">
-    <h2>Repositories & Project Links</h2>
-    <ul class="repo-links">
-      <li><a href="https://github.com/webkanregdenpasar/PDSKKRX" target="_blank">Main Repository</a></li>
-      <!-- Add more repositories here -->
-    </ul>
-    <h3>Programs & Tools</h3>
-    <ul class="project-links">
-      <li><a href="generator.html" target="_blank">Request Status Message Generator</a></li>
-      <li><a href="#" target="_blank">Program 2 Link</a></li>
-      <li><a href="#" target="_blank">Program 3 Link</a></li>
-      <li><a href="#" target="_blank">Program 4 Link</a></li>
-      <li><a href="#" target="_blank">Program 5 Link</a></li>
-      <li><a href="#" target="_blank">Program 6 Link</a></li>
-      <li><a href="#" target="_blank">Program 7 Link</a></li>
-      <li><a href="#" target="_blank">Program 8 Link</a></li>
-      <!-- Add or change links as needed -->
-    </ul>
-  </div>
-  <div id="studio" class="tab-content">
-    <h2>Google Studio</h2>
-    <ul class="project-links">
-      <li><a href="https://datastudio.google.com/" target="_blank">Google Data Studio Main</a></li>
-      <li><a href="#" target="_blank">Studio Project 1</a></li>
-      <li><a href="#" target="_blank">Studio Project 2</a></li>
-      <!-- Add more Google Studio links here -->
-    </ul>
-  </div>
-  <!-- SCRIPTS -->
-  <script>
-    // Tab switching
-    function showTab(tab) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(tabc => tabc.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-        if (btn.textContent.toLowerCase().includes(tab)) btn.classList.add('active');
-      });
-      document.getElementById(tab).classList.add('active');
-    }
 
+  <div class="container mt-4 mb-4">
+    <h1 class="mb-3" style="color:#0078D4;">My Department Dashboard</h1>
+    <ul class="nav nav-tabs" id="myTabs" role="tablist">
+      <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#calendarTab" type="button" role="tab">Calendar</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#repoTab" type="button" role="tab">Repositories</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#projectTab" type="button" role="tab">Projects</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#studioTab" type="button" role="tab">Google Studio</button></li>
+      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#externalTab" type="button" role="tab">External Links</button></li>
+    </ul>
+    <div class="tab-content">
+      <!-- Calendar Tab -->
+      <div class="tab-pane fade show active" id="calendarTab" role="tabpanel">
+        <h2>Event Calendar</h2>
+        <form class="event-form" onsubmit="addEvent(event)">
+          <input type="date" id="eventDate" required>
+          <input type="text" id="eventTitle" placeholder="Event Title" required>
+          <button type="submit" class="btn btn-primary btn-sm">Add Event</button>
+        </form>
+        <ul class="event-list" id="eventList"></ul>
+      </div>
+      <!-- Repositories Tab -->
+      <div class="tab-pane fade" id="repoTab" role="tabpanel">
+        <h2>Repositories</h2>
+        <ul>
+          <li><a href="https://github.com/webkanregdenpasar/PDSKKRX" target="_blank">PDSKKRX</a> - Main repository for request status tools</li>
+          <li><a href="#" target="_blank">Repo 2</a> - Brief description</li>
+          <li><a href="#" target="_blank">Repo 3</a> - Brief description</li>
+          <!-- Add more repo links here -->
+        </ul>
+      </div>
+      <!-- Projects Tab -->
+      <div class="tab-pane fade" id="projectTab" role="tabpanel">
+        <h2>Department Projects</h2>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="project-card">
+              <h5>Request Status Message Generator</h5>
+              <p>Generate and manage request status messages for your organization.</p>
+              <a href="generator.html" class="btn btn-primary" target="_blank">Open Project</a>
+              <a href="project-generator.html" class="btn btn-link" target="_blank">Project Details</a>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="project-card">
+              <h5>Project 2 Name</h5>
+              <p>Short description of project 2. Key features, who it serves, etc.</p>
+              <a href="#" class="btn btn-primary" target="_blank">Open Project</a>
+              <a href="project-2.html" class="btn btn-link" target="_blank">Project Details</a>
+            </div>
+          </div>
+          <!-- Repeat for more projects -->
+        </div>
+      </div>
+      <!-- Google Studio Tab -->
+      <div class="tab-pane fade" id="studioTab" role="tabpanel">
+        <h2>Google Studio</h2>
+        <ul>
+          <li><a href="https://datastudio.google.com/" target="_blank">Google Data Studio Main</a></li>
+          <li><a href="#" target="_blank">Studio Project 1</a></li>
+          <li><a href="#" target="_blank">Studio Project 2</a></li>
+          <!-- Add more Google Studio links -->
+        </ul>
+      </div>
+      <!-- External Links Tab -->
+      <div class="tab-pane fade" id="externalTab" role="tabpanel">
+        <h2>External Links</h2>
+        <ul class="external-link-list">
+          <li><a href="https://www.google.com/" target="_blank">Google</a></li>
+          <li><a href="#" target="_blank">Government Portal</a></li>
+          <li><a href="#" target="_blank">Other Department Site</a></li>
+          <!-- Add more external links -->
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
     // Calendar: Add/Remove Events with localStorage
     const eventList = document.getElementById('eventList');
     let events = JSON.parse(localStorage.getItem('deptEvents') || "[]");
