@@ -33,8 +33,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let calendar; // Declare calendar globally for access in other functions
 
     function initializeCalendar() {
+        console.log("Initializing calendar...");
         if (calendar) { // Destroy existing calendar instance if it exists
             calendar.destroy();
+            console.log("Existing calendar destroyed.");
         }
         calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
@@ -49,6 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Handle date selection to add new event
             select: function(info) {
+                console.log("Date selected:", info.startStr);
                 // Pre-fill event date with selected date
                 eventDateInput.value = info.startStr;
                 openEventModal();
@@ -57,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Handle clicking an existing event to edit/delete
             eventClick: function(info) {
+                console.log("Event clicked:", info.event.id);
                 const eventId = info.event.id;
                 const eventToEdit = calendarEvents.find(e => e.id === eventId);
                 if (eventToEdit) {
@@ -66,13 +70,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Handle event drop (drag-and-drop an event to a new date/time)
             eventDrop: function(info) {
+                console.log("Event dropped:", info.event.id, "New start:", info.event.start);
                 showConfirm('Move event to ' + info.event.start.toLocaleDateString() + '?', (confirmed) => {
                     if (confirmed) {
                         const updatedEvent = {
                             id: info.event.id,
                             title: info.event.title,
                             description: info.event.extendedProps.description,
-                            date: info.event.start.toISOString().split('T')[0] // Get date part
+                            start: info.event.start.toISOString().split('T')[0] // Use 'start' for consistency with FullCalendar event object
                         };
                         updateCalendarEvent(updatedEvent);
                         showAlert('Event updated!', 'Success');
@@ -85,13 +90,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Handle event resize (resizing the duration of an event)
             eventResize: function(info) {
+                 console.log("Event resized:", info.event.id);
                  showConfirm('Resize event duration?', (confirmed) => {
                     if (confirmed) {
                         const updatedEvent = {
                             id: info.event.id,
                             title: info.event.title,
                             description: info.event.extendedProps.description,
-                            date: info.event.start.toISOString().split('T')[0] // Get new start date
+                            start: info.event.start.toISOString().split('T')[0] // Use 'start' for consistency
                             // FullCalendar handles end date implicitly for event objects
                         };
                         updateCalendarEvent(updatedEvent); // Re-save the event to local storage
@@ -104,15 +110,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         calendar.render();
+        console.log("Calendar rendered.");
     }
 
     // --- Modal Functions (reusable for alerts/confirms) ---
     function showAlert(message, title = 'Notifikasi') {
-        genericModalTitle.textContent = title;
+        genericModalTitle.textContent = message; // Use message for title if title isn't provided
         genericModalMessage.textContent = message;
         genericModalCancelButton.classList.add('hidden'); // Hide cancel button for alerts
         genericModalOkButton.onclick = () => genericModalOverlay.classList.add('hidden');
         genericModalOverlay.classList.remove('hidden');
+        console.log("Alert shown:", title, message);
     }
 
     function showConfirm(message, onConfirm, title = 'Konfirmasi') {
@@ -129,10 +137,12 @@ document.addEventListener('DOMContentLoaded', function() {
             onConfirm(false);
         };
         genericModalOverlay.classList.remove('hidden');
+        console.log("Confirm shown:", title, message);
     }
 
     // --- Tab Switching Logic ---
     function showTab(tabName) {
+        console.log("Showing tab:", tabName);
         tabContents.forEach(content => {
             content.classList.add('hidden');
         });
@@ -147,6 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Re-render calendar when its tab is shown to ensure it's correctly sized
         if (tabName === 'calendar') {
             calendar.render();
+            console.log("Calendar re-rendered due to tab switch.");
         }
     }
 
@@ -159,6 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Calendar CRUD Operations ---
     function openEventModal(event = null) {
+        console.log("Opening event modal. Event object:", event);
         eventForm.reset();
         eventIdInput.value = '';
         eventModalTitle.textContent = 'Add Event';
@@ -180,11 +192,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function closeEventModal() {
+        console.log("Closing event modal.");
         eventModalOverlay.classList.add('hidden');
     }
 
     eventForm.addEventListener('submit', (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default form submission
+        console.log("Event form submitted.");
         const id = eventIdInput.value || 'evt' + Date.now(); // Generate ID if new
         const title = eventTitleInput.value.trim();
         const description = eventDescriptionInput.value.trim();
@@ -192,6 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!title || !date) {
             showAlert('Event title and date are required.', 'Input Error');
+            console.warn("Event title or date missing.");
             return;
         }
 
@@ -205,17 +220,22 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         if (eventIdInput.value) { // Editing existing event
+            console.log("Editing existing event:", newEvent.id);
             const existingEvent = calendar.getEventById(id);
             if (existingEvent) {
                 existingEvent.setProp('title', newEvent.title);
                 existingEvent.setStart(newEvent.start);
                 existingEvent.setExtendedProp('description', newEvent.extendedProps.description);
+                updateCalendarEvent(newEvent); // Update localStorage after FullCalendar update
+                showAlert('Event updated successfully!', 'Success');
+            } else {
+                console.error("Existing event not found in FullCalendar to update:", id);
+                showAlert("Could not find event in calendar to update.", "Error");
             }
-            updateCalendarEvent(newEvent);
-            showAlert('Event updated successfully!', 'Success');
         } else { // Adding new event
-            calendar.addEvent(newEvent);
-            saveCalendarEvent(newEvent);
+            console.log("Adding new event:", newEvent.id);
+            calendar.addEvent(newEvent); // Add to FullCalendar
+            saveCalendarEvent(newEvent); // Save to localStorage
             showAlert('Event added successfully!', 'Success');
         }
         closeEventModal();
@@ -223,6 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Helper to save a single event to localStorage
     function saveCalendarEvent(eventObj) {
+        console.log("Saving event to localStorage:", eventObj);
         // Ensure the event object is in a simple format suitable for storage
         const simpleEvent = {
             id: eventObj.id,
@@ -236,6 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Helper to update a single event in localStorage
     function updateCalendarEvent(updatedEvent) {
+        console.log("Updating event in localStorage:", updatedEvent);
         const index = calendarEvents.findIndex(e => e.id === updatedEvent.id);
         if (index > -1) {
             // Ensure consistency in stored format after update
@@ -247,12 +269,13 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             localStorage.setItem('dashboardCalendarEvents', JSON.stringify(calendarEvents));
         } else {
-            console.error("Event not found for update:", updatedEvent);
-            showAlert("Could not find event to update.", "Error");
+            console.error("Event not found in local storage for update:", updatedEvent);
+            showAlert("Could not find event in local storage to update.", "Error");
         }
     }
 
     window.deleteCalendarEvent = function(eventId) {
+        console.log("Attempting to delete event:", eventId);
         showConfirm('Are you sure you want to delete this event?', (confirmed) => {
             if (confirmed) {
                 const eventToRemove = calendar.getEventById(eventId);
@@ -261,26 +284,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     calendarEvents = calendarEvents.filter(e => e.id !== eventId); // Remove from our array
                     localStorage.setItem('dashboardCalendarEvents', JSON.stringify(calendarEvents)); // Update localStorage
                     showAlert('Event deleted!', 'Success');
+                    console.log("Event deleted successfully:", eventId);
+                } else {
+                    console.error("Event not found in FullCalendar to delete:", eventId);
+                    showAlert("Could not find event to delete in calendar.", "Error");
                 }
             } else {
                 showAlert('Event deletion cancelled.', 'Cancelled');
+                console.log("Event deletion cancelled by user.");
             }
         }, 'Confirm Deletion');
     };
 
-    // Make functions globally accessible for HTML onclicks
+    // Make functions globally accessible for HTML onclicks (e.g., from modal close button)
     window.openEventModal = openEventModal;
     window.closeEventModal = closeEventModal;
+    // Note: deleteCalendarEvent is already window.deleteCalendarEvent
 
-    addEventButton.addEventListener('click', () => openEventModal());
+    addEventButton.addEventListener('click', () => {
+        console.log("Add New Event button clicked.");
+        openEventModal();
+    });
 
     // --- Notification Ticker Logic ---
     function renderNotificationTicker() {
+        console.log("Rendering notification ticker.");
         notificationTickerContent.innerHTML = '';
         if (notifications.length === 0) {
             notificationTickerContent.innerHTML = '<span class="ticker-item">No new notifications.</span>';
             // Disable animation if no items or very few items (to prevent awkward looping)
             notificationTickerContent.style.animationPlayState = 'paused';
+            console.log("No notifications, ticker animation paused.");
             return;
         }
 
@@ -300,9 +334,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const speed = contentWidth / 50; // Adjust 50 for desired speed (lower = faster)
             notificationTickerContent.style.setProperty('--ticker-speed', `${speed}s`);
             notificationTickerContent.style.animationPlayState = 'running';
+            console.log(`Ticker animation running with speed: ${speed}s`);
         } else {
              notificationTickerContent.style.animationPlayState = 'paused';
              notificationTickerContent.style.transform = 'translateX(0)'; // Ensure it's not off-screen
+             console.log("Content fits, ticker animation paused.");
         }
     }
 
@@ -310,4 +346,5 @@ document.addEventListener('DOMContentLoaded', function() {
     showTab('calendar'); // Default tab on load
     initializeCalendar(); // Initialize FullCalendar
     renderNotificationTicker(); // Start the notification ticker
+    console.log("Page fully loaded and initialized.");
 });
