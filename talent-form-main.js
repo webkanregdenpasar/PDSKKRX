@@ -11,7 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
     const form = document.getElementById('maturity-assessment-form');
-    const namaInstansiInput = document.getElementById('nama-instansi');
+
+    const namaInstansiSelect = document.getElementById('nama-instansi-select');
+    const newNamaInstansiInput = document.getElementById('new-nama-instansi-input');
 
     const genericModalOverlay = document.getElementById('generic-modal-overlay');
     const genericModalTitle = document.getElementById('generic-modal-title');
@@ -67,6 +69,43 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // --- Nama Instansi Dropdown Logic ---
+    function populateNamaInstansiDropdown() {
+        namaInstansiSelect.innerHTML = '<option value="">-- Pilih atau Tambah Instansi --</option><option value="NEW_INSTANSI">-- Tambah Instansi Baru --</option>';
+        try {
+            const allForms = JSON.parse(localStorage.getItem('allTalentMaturityForms')) || [];
+            allForms.forEach(formData => {
+                const option = document.createElement('option');
+                option.value = formData.namaInstansi;
+                option.textContent = formData.namaInstansi;
+                namaInstansiSelect.appendChild(option);
+            });
+        } catch (e) {
+            console.error("Error populating dropdown:", e);
+            showAlert('Gagal memuat daftar instansi.', 'Error');
+        }
+    }
+
+    namaInstansiSelect.addEventListener('change', () => {
+        const selectedValue = namaInstansiSelect.value;
+        if (selectedValue === 'NEW_INSTANSI') {
+            newNamaInstansiInput.classList.remove('hidden');
+            newNamaInstansiInput.value = ''; // Clear previous input
+            newNamaInstansiInput.focus();
+            form.reset(); // Clear other form fields for a new entry
+            window.calculateScore(); // Reset scores to 0
+        } else if (selectedValue === '') {
+            newNamaInstansiInput.classList.add('hidden');
+            newNamaInstansiInput.value = '';
+            form.reset(); // Clear other form fields
+            window.calculateScore(); // Reset scores to 0
+        } else {
+            newNamaInstansiInput.classList.add('hidden');
+            newNamaInstansiInput.value = '';
+            window.loadFormData(selectedValue); // Load data for selected instance
+        }
+    });
+
     window.calculateScore = function() {
         console.log("Calculating score...");
         let totalScore = 0;
@@ -105,10 +144,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.saveProgress = function() {
         console.log("Attempting to save progress...");
-        const namaInstansi = namaInstansiInput.value.trim();
-        if (!namaInstansi) {
-            showAlert('Nama Instansi harus diisi untuk menyimpan progres.', 'Error Input');
-            console.warn("Nama Instansi is empty.");
+        let namaInstansi;
+        if (namaInstansiSelect.value === 'NEW_INSTANSI') {
+            namaInstansi = newNamaInstansiInput.value.trim();
+        } else {
+            namaInstansi = namaInstansiSelect.value;
+        }
+
+        if (!namaInstansi || namaInstansi === '') {
+            showAlert('Nama Instansi harus diisi atau dipilih untuk menyimpan progres.', 'Error Input');
+            console.warn("Nama Instansi is empty or not selected.");
             return;
         }
 
@@ -154,6 +199,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             localStorage.setItem('allTalentMaturityForms', JSON.stringify(allForms));
+            populateNamaInstansiDropdown(); // Refresh dropdown to include new item if added
+            namaInstansiSelect.value = namaInstansi; // Select the current instance
+            newNamaInstansiInput.classList.add('hidden'); // Hide new input
+            newNamaInstansiInput.value = '';
+
             showAlert('Progres Anda untuk ' + namaInstansi + ' telah disimpan!', 'Penyimpanan Berhasil');
         } catch (e) {
             console.error("Error saving progress:", e);
@@ -168,7 +218,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = allForms.find(f => f.namaInstansi === instansiName);
 
             if (formData) {
-                namaInstansiInput.value = formData.namaInstansi || '';
+                namaInstansiSelect.value = instansiName;
+                newNamaInstansiInput.classList.add('hidden'); // Hide new input field
 
                 const checkboxes = form.querySelectorAll('input[type="checkbox"][name="indikator"]');
                 checkboxes.forEach((checkbox, index) => {
@@ -195,7 +246,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Form data loaded successfully for:", instansiName);
             } else {
                 showAlert('Tidak ada progres tersimpan untuk instansi tersebut.', 'Informasi');
-                namaInstansiInput.value = instansiName; // Keep the requested instance name
+                namaInstansiSelect.value = ''; // Reset dropdown
+                newNamaInstansiInput.classList.add('hidden');
+                newNamaInstansiInput.value = '';
                 form.reset(); // Clear other fields
                 window.calculateScore(); // Reset scores to 0
                 console.log("No form data found for:", instansiName, "Resetting form.");
@@ -208,10 +261,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.exportToCsv = function() {
         console.log("Attempting to export to CSV...");
-        const namaInstansi = namaInstansiInput.value.trim();
-        if (!namaInstansi) {
-            showAlert('Mohon isi Nama Instansi sebelum mengunduh CSV.', 'Input Diperlukan');
-            console.warn("Nama Instansi is empty for CSV export.");
+        let namaInstansi;
+        if (namaInstansiSelect.value === 'NEW_INSTANSI') {
+            namaInstansi = newNamaInstansiInput.value.trim();
+        } else {
+            namaInstansi = namaInstansiSelect.value;
+        }
+
+        if (!namaInstansi || namaInstansi === '') {
+            showAlert('Mohon isi atau pilih Nama Instansi sebelum mengunduh CSV.', 'Input Diperlukan');
+            console.warn("Nama Instansi is empty or not selected for CSV export.");
             return;
         }
 
@@ -240,37 +299,62 @@ document.addEventListener('DOMContentLoaded', () => {
             const sectionId = block.closest('.tab-content').id.replace('-content', '');
             const sectionName = sections[sectionId] || "Unknown Section";
             
-            const questionTitleElement = block.querySelector('h3');
-            let questionTitle = questionTitleElement ? questionTitleElement.textContent.trim() : "Unknown Question";
+            // Re-select relevant inputs based on the block structure
+            const checkbox = block.querySelector('input[type="checkbox"][name="indikator"]');
+            const indikatorTextSpan = block.querySelector('span'); // Assuming the indicator text is in a span directly under label
+            const keteranganTextarea = block.querySelector('textarea');
+            const buktiDukungInput = block.querySelector('input[type="text"][placeholder="Input Tautan Bukti Dukung"]');
 
-            const indikatorRows = block.querySelectorAll('.grid.grid-cols-1'); // Each indicator row
-            indikatorRows.forEach(row => {
-                const checkbox = row.querySelector('input[type="checkbox"][name="indikator"]');
-                const indikatorTextSpan = row.querySelector('span');
-                const keteranganTextarea = row.querySelector('textarea');
-                const buktiDukungInput = row.querySelector('input[type="text"][placeholder="Input Tautan Bukti Dukung"]');
+            if (checkbox && indikatorTextSpan) {
+                const indikator = indikatorTextSpan.textContent.trim().replace(/\s+/g, ' '); // Clean whitespace
+                const nilaiIndikator = checkbox.value;
+                const dicentang = checkbox.checked ? "YA" : "TIDAK";
+                const keterangan = keteranganTextarea ? keteranganTextarea.value.trim() : "";
+                const buktiDukung = buktiDukungInput ? buktiDukungInput.value.trim() : "";
 
-                if (checkbox && indikatorTextSpan) {
-                    const indikator = indikatorTextSpan.textContent.trim().replace(/\s+/g, ' '); // Clean whitespace
-                    const nilaiIndikator = checkbox.value;
-                    const dicentang = checkbox.checked ? "YA" : "TIDAK";
-                    const keterangan = keteranganTextarea ? keteranganTextarea.value.trim() : "";
-                    const buktiDukung = buktiDukungInput ? buktiDukungInput.value.trim() : "";
+                const rowData = [
+                    namaInstansi,
+                    sectionName,
+                    indikator,
+                    nilaiIndikator,
+                    dicentang,
+                    keterangan.replace(/;/g, ",").replace(/\n/g, " "), // Replace semicolons and newlines to avoid CSV issues
+                    buktiDukung.replace(/;/g, ",")
+                ].map(item => `"${item}"`); // Enclose each item in quotes
 
-                    const rowData = [
-                        namaInstansi,
-                        sectionName,
-                        indikator,
-                        nilaiIndikator,
-                        dicentang,
-                        keterangan.replace(/;/g, ",").replace(/\n/g, " "), // Replace semicolons and newlines to avoid CSV issues
-                        buktiDukung.replace(/;/g, ",")
-                    ].map(item => `"${item}"`); // Enclose each item in quotes
+                csvContent += rowData.join(";") + "\n";
+            } else {
+                // If the block contains multiple indicators, iterate through them
+                const allIndikatorRows = block.querySelectorAll('.grid.grid-cols-1'); // Selects each inner grid row
+                allIndikatorRows.forEach(row => {
+                    const innerCheckbox = row.querySelector('input[type="checkbox"][name="indikator"]');
+                    const innerIndikatorTextSpan = row.querySelector('span');
+                    const innerKeteranganTextarea = row.querySelector('textarea');
+                    const innerBuktiDukungInput = row.querySelector('input[type="text"][placeholder="Input Tautan Bukti Dukung"]');
 
-                    csvContent += rowData.join(";") + "\n";
-                }
-            });
+                    if (innerCheckbox && innerIndikatorTextSpan) {
+                        const indikator = innerIndikatorTextSpan.textContent.trim().replace(/\s+/g, ' ');
+                        const nilaiIndikator = innerCheckbox.value;
+                        const dicentang = innerCheckbox.checked ? "YA" : "TIDAK";
+                        const keterangan = innerKeteranganTextarea ? innerKeteranganTextarea.value.trim() : "";
+                        const buktiDukung = innerBuktiDukungInput ? innerBuktiDukungInput.value.trim() : "";
+
+                        const rowData = [
+                            namaInstansi,
+                            sectionName,
+                            indikator,
+                            nilaiIndikator,
+                            dicentang,
+                            keterangan.replace(/;/g, ",").replace(/\n/g, " "),
+                            buktiDukung.replace(/;/g, ",")
+                        ].map(item => `"${item}"`);
+
+                        csvContent += rowData.join(";") + "\n";
+                    }
+                });
+            }
         });
+
 
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
@@ -290,14 +374,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Initial load based on URL parameter or new form
+    // Initial load logic
+    populateNamaInstansiDropdown(); // Populate dropdown first
+
     const urlParams = new URLSearchParams(window.location.search);
     const instansiToLoad = urlParams.get('instansi');
     if (instansiToLoad) {
-        window.loadFormData(instansiToLoad);
+        window.loadFormData(instansiToLoad); // Load specific instance if URL parameter exists
     } else {
-        // Default to showing the first tab for a new blank form
-        showTab('kelembagaan');
+        showTab('kelembagaan'); // Default to showing the first tab for a new blank form
         window.calculateScore(); // Initialize scores to 0
         console.log("New form initialized.");
     }
