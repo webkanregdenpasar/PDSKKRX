@@ -55,15 +55,16 @@
     It features a main header and an input for "Nama Instansi." A primary tabbed navigation system organizes the assessment into five main sections: "Kelembagaan," "Infrastruktur Teknologi," "Akuisisi Talenta," "Pengembangan & Retensi Talenta," and "Pemantauan & Evaluasi." Each tab reveals a corresponding content area.
     Within each content area, a structured questionnaire is presented. Each question (corresponding to an "Indikator") includes a checkbox, a text area for "Keterangan Kondisi Instansi," and a text input for "Input Tautan Bukti Dukung."
     A "Hitung Skor" (Calculate Score) button triggers the calculation of individual section scores and a grand total, which are displayed dynamically at the bottom.
-    "Simpan Progres" (Save Progress) and "Download CSV" buttons allow users to persist their form data and export it for the current instance.
+    "Simpan Progres" (Save Progress) and "Muat Progres" (Load Progress) buttons allow users to persist and retrieve their form data using local storage.
     This architecture provides a clear, sequential flow for completing the assessment while allowing easy navigation between sections. The interactive elements (checkboxes, text inputs, dynamic score display) enhance user engagement and data entry efficiency.
 
     Visualization & Content Choices:
     - Main Navigation Tabs: HTML buttons with dynamic Tailwind classes for active states. Goal: Navigate, Organize. Interaction: Click to switch assessment sections.
-    - Input Fields: Text inputs and textareas for data entry (Nama Instansi, Keterangan Kondisi Instansi, Input Tautan Bukti Dukung). Goal: Input. Interaction: Typing.
+    - Input Fields: Text inputs and textareas for data entry (Keterangan Kondisi Instansi, Input Tautan Bukti Dukung). The "Nama Instansi" is now a dropdown with a conditional text input for new entries. Goal: Input. Interaction: Typing.
     - Checkboxes: Standard HTML checkboxes for "Daftar Centang." Goal: Input, Inform (binary state). Interaction: Click to select/deselect.
     - Dynamic Score Display: Text elements updated via JavaScript to show calculated scores. Goal: Inform (quantitative data, results). Interaction: Automatic update after calculation.
-    - Save/Download Buttons: HTML buttons for data persistence and export. Goal: Action. Interaction: Click to save/download.
+    - Save/Load/Download Buttons: HTML buttons for data persistence, retrieval, and export. Goal: Action. Interaction: Click to save/load/download from local storage.
+    - Home Button: Added to navigate back to the main dashboard.
     - Overall Layout: Centered container (`max-w-5xl mx-auto`) with responsive padding. Tailwind's flexbox for tab navigation and grid for questionnaire item layout within each tab.
     - Modals: Reusable modal for alerts and confirmations (e.g., for missing fields or successful save/load).
     - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
@@ -71,15 +72,25 @@
 </head>
 <body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-5xl mb-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Formulir Tingkat Kematangan Pembangunan Manajemen Talenta</h1>
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 text-center flex-grow">Formulir Tingkat Kematangan Pembangunan Manajemen Talenta</h1>
+            <a href="index.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+                Home
+            </a>
+        </div>
 
         <p class="text-gray-700 text-base mb-6 text-center">
             Isi formulir ini untuk menilai tingkat kematangan pembangunan manajemen talenta instansi Anda. Centang indikator yang telah terpenuhi, berikan keterangan, dan tautkan bukti pendukung.
         </p>
 
         <div class="mb-6">
-            <label for="nama-instansi" class="block text-gray-700 text-sm font-semibold mb-2">Nama Instansi:</label>
-            <input type="text" id="nama-instansi" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Masukkan Nama Instansi Anda">
+            <label for="nama-instansi-select" class="block text-gray-700 text-sm font-semibold mb-2">Nama Instansi:</label>
+            <select id="nama-instansi-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="">-- Pilih atau Tambah Instansi --</option>
+                <option value="NEW_INSTANSI">-- Tambah Instansi Baru --</option>
+                <!-- Options will be populated by JavaScript -->
+            </select>
+            <input type="text" id="new-nama-instansi-input" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 mt-2 hidden" placeholder="Masukkan Nama Instansi Baru">
         </div>
 
         <!-- Tab Navigation -->
@@ -709,7 +720,6 @@
         </div>
     </div>
 
-    <!-- Link to external JavaScript file -->
     <script src="talent-form-main.js"></script>
 </body>
 </html>
