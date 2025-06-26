@@ -2,30 +2,231 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Welcome to Request Status Tools</title>
+  <title>Request Status Message Generator</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin-top: 10vh; }
-    .main-btn {
-      display: inline-block;
-      margin-top: 2em;
-      padding: 1em 2em;
-      font-size: 1.2em;
-      background: #0078D4;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      text-decoration: none;
-      transition: background 0.2s;
-    }
-    .main-btn:hover {
-      background: #005fa3;
-    }
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    label { display: block; margin-top: 1em; }
+    .rejection-section, .rejection-reason-section, .other-reason-section, .doc-checkbox-section { display: none; }
+    .output { margin-top: 2em; padding: 1em; border: 1px solid #ccc; }
+    .csv-database { margin-top: 2em; width: 100%; min-height: 80px; font-family: monospace; }
+    button { margin-right: 1em; }
+    #copyBtn { float: right; }
   </style>
 </head>
 <body>
-  <h1>Welcome to the Request Status Tools</h1>
-  <p>This site helps you generate and manage request status messages easily.</p>
-  <a class="main-btn" href="generator.html">Go to Request Status Message Generator</a>
+  <h1>Request Status Message Generator</h1>
+  <form id="statusForm" onsubmit="return false;">
+    <label>
+      Organisation who requested:
+      <select id="organisation" required>
+        <option value="">-- Select --</option>
+        <option value="Organisation A">Organisation A</option>
+        <option value="Organisation B">Organisation B</option>
+        <option value="Organisation C">Organisation C</option>
+      </select>
+    </label>
+    <label>
+      Date:
+      <input type="date" id="date" required>
+    </label>
+    <label>
+      Type of service:
+      <select id="serviceType" required>
+        <option value="">-- Select --</option>
+        <option value="Document Review">Document Review</option>
+        <option value="Certification">Certification</option>
+        <option value="Consultation">Consultation</option>
+      </select>
+    </label>
+    <label>
+      Request Status:
+      <button type="button" id="acceptBtn">Accept</button>
+      <button type="button" id="rejectBtn">Reject</button>
+    </label>
+    <div class="doc-checkbox-section" id="docCheckboxSection">
+      <label>Kind(s) of document (select all that apply):</label>
+      <label><input type="checkbox" name="docKind" value="ID Card"> ID Card</label>
+      <label><input type="checkbox" name="docKind" value="Passport"> Passport</label>
+      <label><input type="checkbox" name="docKind" value="Certificate"> Certificate</label>
+      <label><input type="checkbox" name="docKind" value="Other" id="docOtherBox"> Other</label>
+      <input type="text" id="otherDocument" style="display:none;" placeholder="Please specify other document"/>
+    </div>
+    <div class="rejection-section" id="rejectionSection">
+      <label>
+        Type of rejection:
+        <select id="rejectionType">
+          <option value="">-- Select --</option>
+          <option value="Incomplete Documents">Incomplete Documents</option>
+          <option value="Not Eligible">Not Eligible</option>
+        </select>
+      </label>
+      <div class="rejection-reason-section" id="rejectionReasonSection">
+        <label>
+          Rejection reason:
+          <select id="rejectionReason">
+            <option value="">-- Select --</option>
+            <option value="Fake Document">Fake Document</option>
+            <option value="Missing Document">Missing Document</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <div class="other-reason-section" id="otherReasonSection">
+          <input type="text" id="otherReason" placeholder="Please specify"/>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:1.5em;">
+      <button type="button" id="submitBtn">Submit</button>
+    </div>
+  </form>
+  <div class="output" id="output" style="display:none;">
+    <button id="copyBtn">Copy</button>
+    <pre id="generatedMessage" style="white-space: pre-wrap; margin-bottom: 1em;"></pre>
+  </div>
+  <h2>CSV Database (Simulated)</h2>
+  <textarea class="csv-database" id="csvDatabase" readonly></textarea>
+
+  <script>
+    // Set default date to today
+    document.getElementById('date').valueAsDate = new Date();
+
+    // Show/hide Other for kind of document (checkboxes)
+    document.getElementById('docOtherBox').onchange = function(){
+      document.getElementById('otherDocument').style.display = this.checked ? "inline-block" : "none";
+      generateMessage();
+    };
+
+    // Accept / Reject logic
+    let status = '';
+    document.getElementById('acceptBtn').onclick = function() {
+      status = 'Accepted';
+      document.getElementById('rejectionSection').style.display = 'none';
+      document.getElementById('docCheckboxSection').style.display = 'none';
+      document.getElementById('output').style.display = 'none';
+      generateMessage();
+    };
+    document.getElementById('rejectBtn').onclick = function() {
+      status = 'Rejected';
+      document.getElementById('rejectionSection').style.display = 'block';
+      document.getElementById('docCheckboxSection').style.display = 'block';
+      document.getElementById('output').style.display = 'none';
+      generateMessage();
+    };
+
+    // Show/hide rejection reason section
+    document.getElementById('rejectionType').onchange = function() {
+      document.getElementById('rejectionReasonSection').style.display = 
+        this.value ? 'block' : 'none';
+      generateMessage();
+    };
+    // Show/hide other reason input
+    document.getElementById('rejectionReason').onchange = function() {
+      document.getElementById('otherReasonSection').style.display =
+        this.value === "Other" ? "block" : "none";
+      generateMessage();
+    };
+
+    // Listen for form changes
+    document.getElementById('statusForm').oninput = generateMessage;
+    document.getElementById('otherDocument').oninput = generateMessage;
+    document.getElementById('otherReason').oninput = generateMessage;
+
+    function getValue(id) {
+      return document.getElementById(id).value;
+    }
+    function getCheckedDocs() {
+      let checked = [];
+      document.querySelectorAll('input[name="docKind"]:checked').forEach(cb => {
+        if(cb.value === "Other") {
+          if(document.getElementById('otherDocument').value) {
+            checked.push(document.getElementById('otherDocument').value);
+          }
+        } else {
+          checked.push(cb.value);
+        }
+      });
+      return checked;
+    }
+
+    function generateMessage() {
+      const org = getValue('organisation');
+      const date = getValue('date');
+      const serviceType = getValue('serviceType');
+      let docKinds = [];
+      if (status === 'Rejected') {
+        docKinds = getCheckedDocs();
+      }
+      const rejectionType = getValue('rejectionType');
+      const rejectionReason = getValue('rejectionReason') === "Other" ? getValue('otherReason') : getValue('rejectionReason');
+
+      if (!org || !date || !serviceType || !status) {
+        document.getElementById('generatedMessage').textContent = '';
+        return;
+      }
+
+      let message = `On ${date}, the organisation "${org}" requested "${serviceType}".\n\nStatus: ${status}.`;
+
+      if (status === 'Rejected') {
+        if(docKinds.length) {
+          message += `\nKinds of document involved: ${docKinds.join(", ")}.`;
+        }
+        if(rejectionType) {
+          message += `\nRejection type: ${rejectionType}.`;
+        }
+        if (rejectionReason) {
+          message += `\nRejection reason: ${rejectionReason}.`;
+        }
+      }
+
+      document.getElementById('generatedMessage').textContent = message;
+    }
+
+    // CSV simulation & output reveal
+    document.getElementById('submitBtn').onclick = function() {
+      const org = getValue('organisation');
+      const date = getValue('date');
+      const serviceType = getValue('serviceType');
+      let docKinds = [];
+      if (status === 'Rejected') {
+        docKinds = getCheckedDocs();
+      }
+      let csvRow = [org, date, serviceType, docKinds.join(';'), status];
+
+      let message = '';
+      // Force regenerate
+      generateMessage();
+      message = document.getElementById('generatedMessage').textContent;
+
+      if (!org || !date || !serviceType || !status || !message) {
+        alert("Please complete the form and select Accept or Reject.");
+        return;
+      }
+
+      if (status === "Rejected") {
+        const rejectionType = getValue('rejectionType');
+        const rejectionReason = getValue('rejectionReason') === "Other" ? getValue('otherReason') : getValue('rejectionReason');
+        if (!docKinds.length || !rejectionType || !rejectionReason) {
+          alert("Please select at least one document, rejection type, and reason.");
+          return;
+        }
+        csvRow = csvRow.concat([rejectionType, rejectionReason]);
+      }
+
+      // Append to CSV area
+      document.getElementById('csvDatabase').value += csvRow.map(val => `"${(val||'').replace(/"/g,'""')}"`).join(',') + "\n";
+
+      // Show the output/message area
+      document.getElementById('output').style.display = 'block';
+    };
+
+    // Copy to clipboard
+    document.getElementById('copyBtn').onclick = function() {
+      const text = document.getElementById('generatedMessage').textContent;
+      if (!text) return;
+      navigator.clipboard.writeText(text);
+      this.textContent = 'Copied!';
+      setTimeout(() => { this.textContent = 'Copy'; }, 1500);
+    };
+  </script>
 </body>
 </html>
