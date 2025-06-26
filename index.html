@@ -1,146 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Department Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Bootstrap for easy styling (optional, you can remove if you prefer custom CSS) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body { background: #f5f7fa; }
-    .ticker {
-      width: 100vw; background: #0078D4; color: #fff; overflow: hidden; white-space: nowrap;
-      padding: 0.5em 0; font-weight: bold; 
-    }
-    .ticker span {
-      display: inline-block;
-      padding-left: 100vw;
-      animation: ticker 18s linear infinite;
-    }
-    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100vw); } }
-    .nav-tabs .nav-link.active { color: #0078D4 !important; font-weight: bold; }
-    .tab-content { background: #fff; border-radius: 0 0 6px 6px; padding: 2em 1em; }
-    .event-list { list-style: none; padding: 0; }
-    .event-list li { background: #f1f7ff; margin: 0.5em 0; padding: 0.75em 1em; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
-    .event-list button { background: #dc3545; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; padding: 0.3em 0.9em;}
-    .event-form input, .event-form button { font-size: 1em; padding: 0.5em; margin-right: 0.5em; }
-    .project-card { margin: 1em 0; padding: 1em; background: #eef6fb; border-radius: 8px; }
-    .project-card .btn { margin-top: 0.5em; }
-    .external-link-list li { margin: 0.5em 0; }
-    .external-link-list a { color: #0078D4; text-decoration: none; }
-    .external-link-list a:hover { text-decoration: underline; }
-  </style>
-</head>
-<body>
-  <!-- Notification Ticker -->
-  <div class="ticker"><span>🛎️ Notifications: Server maintenance this Friday 7 PM | New SOP released | Fill your event report on time | ...</span></div>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Department Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FullCalendar CSS -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* bg-gray-100 */
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000; /* Ensure modal is on top */
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        .modal-close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #4a5568; /* gray-700 */
+        }
+        /* Notification Ticker Styling */
+        .ticker-container {
+            overflow: hidden;
+            height: 1.5em; /* Adjust based on your text size */
+            line-height: 1.5em;
+            background-color: #eff6ff; /* bg-blue-50 */
+            border-radius: 0.5rem; /* rounded-lg */
+            padding: 0.5rem 1rem;
+            margin-bottom: 1.5rem; /* mb-6 */
+            white-space: nowrap;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .ticker-label {
+            font-weight: 600; /* font-semibold */
+            color: #1d4ed8; /* text-blue-700 */
+            margin-right: 0.75rem;
+        }
+        .ticker-content {
+            flex-grow: 1;
+            display: flex;
+            animation: ticker-scroll linear infinite;
+            animation-duration: var(--ticker-speed, 20s); /* Default speed */
+        }
+        .ticker-item {
+            padding-right: 2rem; /* Spacing between items */
+            color: #3b82f6; /* text-blue-500 */
+            font-size: 0.875rem; /* text-sm */
+        }
+        @keyframes ticker-scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
 
-  <div class="container mt-4 mb-4">
-    <h1 class="mb-3" style="color:#0078D4;">My Department Dashboard</h1>
-    <ul class="nav nav-tabs" id="myTabs" role="tablist">
-      <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#calendarTab" type="button" role="tab">Calendar</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#repoTab" type="button" role="tab">Repositories</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#projectTab" type="button" role="tab">Projects</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#studioTab" type="button" role="tab">Google Studio</button></li>
-      <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#externalTab" type="button" role="tab">External Links</button></li>
-    </ul>
-    <div class="tab-content">
-      <!-- Calendar Tab -->
-      <div class="tab-pane fade show active" id="calendarTab" role="tabpanel">
-        <h2>Event Calendar</h2>
-        <form class="event-form" onsubmit="addEvent(event)">
-          <input type="date" id="eventDate" required>
-          <input type="text" id="eventTitle" placeholder="Event Title" required>
-          <button type="submit" class="btn btn-primary btn-sm">Add Event</button>
-        </form>
-        <ul class="event-list" id="eventList"></ul>
-      </div>
-      <!-- Repositories Tab -->
-      <div class="tab-pane fade" id="repoTab" role="tabpanel">
-        <h2>Repositories</h2>
-        <ul>
-          <li><a href="https://github.com/webkanregdenpasar/PDSKKRX" target="_blank">PDSKKRX</a> - Main repository for request status tools</li>
-          <li><a href="#" target="_blank">Repo 2</a> - Brief description</li>
-          <li><a href="#" target="_blank">Repo 3</a> - Brief description</li>
-          <!-- Add more repo links here -->
-        </ul>
-      </div>
-      <!-- Projects Tab -->
-      <div class="tab-pane fade" id="projectTab" role="tabpanel">
-        <h2>Department Projects</h2>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="project-card">
-              <h5>Alat Bantu Imut</h5>
-              <p>Generate and manage request status messages for IMUT.</p>
-              <a href="generator.html" class="btn btn-primary" target="_blank">Open Project</a>
-              <a href="project-generator.html" class="btn btn-link" target="_blank">Project Details</a>
+        /* Calendar specific styling for selected dates */
+        #calendar .fc-daygrid-day.fc-day-other-month {
+            opacity: 0.5; /* Dim days from other months */
+        }
+        #calendar .fc-daygrid-day.fc-day-today {
+            background-color: #dbeafe; /* Light blue for today */
+            border-radius: 0.5rem;
+        }
+        .fc-daygrid-day-frame {
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .fc-toolbar-title {
+            color: #1f2937; /* gray-900 */
+        }
+        .fc-button-primary {
+            background-color: #3b82f6 !important;
+            border-color: #3b82f6 !important;
+            color: white !important;
+        }
+        .fc-button-primary:hover {
+            background-color: #2563eb !important;
+            border-color: #2563eb !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-5xl mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Department Dashboard</h1>
+
+        <p class="text-gray-700 text-base mb-6 text-center">
+            Selamat datang di dashboard departemen Anda. Gunakan navigasi tab untuk mengakses berbagai fitur dan informasi penting.
+        </p>
+
+        <!-- Notification Ticker -->
+        <div class="ticker-container">
+            <span class="ticker-label">INFO:</span>
+            <div id="notification-ticker-content" class="ticker-content">
+                <!-- Notifications will be loaded here by JavaScript -->
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="project-card">
-              <h5>Alat Bantu Manajemen Talenta</h5>
-              <p>Short description of project 2. Key features, who it serves, etc.</p>
-              <a href="manajementalenta.html" class="btn btn-primary" target="_blank">Open Project</a>
-              <a href="project-manajementalenta.html" class="btn btn-link" target="_blank">Project Details</a>
-            </div>
-          </div>
-          <!-- Repeat for more projects -->
         </div>
-      </div>
-      <!-- Google Studio Tab -->
-      <div class="tab-pane fade" id="studioTab" role="tabpanel">
-        <h2>Google Studio</h2>
-        <ul>
-          <li><a href="https://lookerstudio.google.com/u/0/reporting/b27bd506-c08c-48ed-8161-f142aa480db2/page/QedGF">Google Data Studio Main</a></li>
-          <!-- Add more Google Studio links -->
-        </ul>
-      </div>
-      <!-- External Links Tab -->
-      <div class="tab-pane fade" id="externalTab" role="tabpanel">
-        <h2>External Links</h2>
-        <ul class="external-link-list">
-          <li><a href="https://asndigital.bkn.go.id/">ASN digital</a></li>
-          <li><a href="https://denpasar.bkn.go.id/">Kanreg X Website</a></li>
-          <li><a href="#" target="_blank">Other Department Site</a></li>
-          <!-- Add more external links -->
-        </ul>
-      </div>
+
+        <!-- Tab Navigation -->
+        <div class="flex flex-wrap justify-center md:justify-start border-b border-gray-200 mb-6">
+            <button class="tab-button py-3 px-6 text-lg font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out" data-tab="calendar">
+                Calendar
+            </button>
+            <button class="tab-button py-3 px-6 text-lg font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out" data-tab="projects">
+                Projects
+            </button>
+            <button class="tab-button py-3 px-6 text-lg font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out" data-tab="repository">
+                Repository
+            </button>
+            <button class="tab-button py-3 px-6 text-lg font-medium text-gray-600 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition duration-200 ease-in-out" data-tab="external-links">
+                External Links
+            </button>
+        </div>
+
+        <!-- Tab Content Containers -->
+        <div id="calendar-content" class="tab-content">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Department Calendar</h2>
+            <div id="calendar" class="mb-4"></div>
+            <div class="flex justify-center mt-4 space-x-4">
+                 <button id="add-event-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">
+                    Add New Event
+                </button>
+            </div>
+        </div>
+
+        <div id="projects-content" class="tab-content hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Project Tools & Forms</h2>
+            <p class="text-gray-700 mb-4">Akses alat dan formulir terkait proyek utama departemen.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="generator.html" target="_blank" class="block bg-green-50 hover:bg-green-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
+                    <span class="font-semibold text-green-700">IMUT (Message Generator)</span>
+                    <p class="text-gray-600 text-sm">Akses alat pembuat pesan otomatis.</p>
+                </a>
+                <a href="manajementalenta.html" target="_blank" class="block bg-green-50 hover:bg-green-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
+                    <span class="font-semibold text-green-700">Formulir Manajemen Talenta</span>
+                    <p class="text-gray-600 text-sm">Isi dan kelola formulir tingkat kematangan manajemen talenta.</p>
+                </a>
+                 <a href="dashboard.html" target="_blank" class="block bg-yellow-50 hover:bg-yellow-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
+                    <span class="font-semibold text-yellow-700">Dashboard Manajemen Talenta</span>
+                    <p class="text-gray-600 text-sm">Lihat ringkasan semua data formulir manajemen talenta.</p>
+                </a>
+                <!-- Add more project links as needed -->
+            </div>
+        </div>
+
+        <div id="repository-content" class="tab-content hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Code Repositories & Documentation</h2>
+            <p class="text-gray-700 mb-4">Akses repositori kode penting dan dokumentasi untuk pengembangan dan referensi.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="https://github.com/your-org/frontend-monorepo" target="_blank" class="block bg-blue-50 hover:bg-blue-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
+                    <span class="font-semibold text-blue-700">Frontend Monorepo</span>
+                    <p class="text-gray-600 text-sm">Repositori terpusat untuk semua aplikasi frontend.</p>
+                </a>
+                <a href="https://github.com/your-org/backend-services" target="_blank" class="block bg-blue-50 hover:bg-blue-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
+                    <span class="font-semibold text-blue-700">Backend Services</span>
+                    <p class="text-gray-600 text-sm">API backend inti dan layanan mikro.</p>
+                </a>
+                <!-- Add more repository links as needed -->
+            </div>
+        </div>
+
+        <div id="external-links-content" class="tab-content hidden">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Useful External Links</h2>
+            <p class="text-gray-700 mb-4">Tautan cepat ke layanan dan dashboard eksternal yang sering digunakan.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="https://analytics.google.com/" target="_blank" class="block bg-yellow-50 hover:bg-yellow-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
+                    <span class="font-semibold text-yellow-700">Google Analytics Dashboard</span>
+                    <p class="text-gray-600 text-sm">Lihat lalu lintas situs web dan analisis perilaku pengguna.</p>
+                </a>
+                <a href="https://lookerstudio.google.com/" target="_blank" class="block bg-yellow-50 hover:bg-yellow-100 p-4 rounded-lg shadow-sm transition duration-200 ease-in-out">
+                    <span class="font-semibold text-yellow-700">Google Data Studio Reports</span>
+                    <p class="text-gray-600 text-sm">Akses visualisasi dan laporan data kustom.</p>
+                </a>
+                <!-- Add more external links as needed -->
+            </div>
+        </div>
     </div>
-  </div>
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // Calendar: Add/Remove Events with localStorage
-    const eventList = document.getElementById('eventList');
-    let events = JSON.parse(localStorage.getItem('deptEvents') || "[]");
-    function renderEvents() {
-      eventList.innerHTML = '';
-      if (!events.length) eventList.innerHTML = '<li>No events added yet.</li>';
-      events.sort((a, b) => a.date.localeCompare(b.date)).forEach((ev, idx) => {
-        const li = document.createElement('li');
-        li.innerHTML = `<span>📅 <b>${ev.date}</b> - ${ev.title}</span>
-          <button onclick="removeEvent(${idx})">Remove</button>`;
-        eventList.appendChild(li);
-      });
-    }
-    function addEvent(e) {
-      e.preventDefault();
-      const date = document.getElementById('eventDate').value;
-      const title = document.getElementById('eventTitle').value.trim();
-      if (!date || !title) return;
-      events.push({ date, title });
-      localStorage.setItem('deptEvents', JSON.stringify(events));
-      renderEvents();
-      e.target.reset();
-    }
-    function removeEvent(idx) {
-      if (!confirm("Delete this event?")) return;
-      events.splice(idx, 1);
-      localStorage.setItem('deptEvents', JSON.stringify(events));
-      renderEvents();
-    }
-    renderEvents();
-  </script>
+
+    <!-- Event Modal Structure -->
+    <div id="event-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="modal-close-button" onclick="closeEventModal()">&times;</button>
+            <h2 id="event-modal-title" class="text-2xl font-bold text-gray-800 mb-4">Add Event</h2>
+            <form id="event-form">
+                <input type="hidden" id="event-id">
+                <div class="mb-4">
+                    <label for="event-title" class="block text-gray-700 text-sm font-semibold mb-2">Event Title:</label>
+                    <input type="text" id="event-title" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div class="mb-4">
+                    <label for="event-description" class="block text-gray-700 text-sm font-semibold mb-2">Description:</label>
+                    <textarea id="event-description" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-y" rows="3"></textarea>
+                </div>
+                <div class="mb-6">
+                    <label for="event-date" class="block text-gray-700 text-sm font-semibold mb-2">Date:</label>
+                    <input type="date" id="event-date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeEventModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg shadow-sm transition duration-300 ease-in-out">Cancel</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">Save Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Generic Alert/Confirm Modal Structure -->
+    <div id="generic-modal-overlay" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2 id="generic-modal-title" class="text-2xl font-bold text-gray-800 mb-4"></h2>
+            <p id="generic-modal-message" class="text-gray-700 mb-6"></p>
+            <div class="flex justify-end space-x-3">
+                <button id="generic-modal-cancel" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg shadow-sm transition duration-300 ease-in-out hidden">Batal</button>
+                <button id="generic-modal-ok" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FullCalendar JS -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <!-- Your main JavaScript file -->
+    <script src="main.js"></script>
 </body>
 </html>
